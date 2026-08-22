@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty name="LOGS_JDBC_URL" source="spring.datasource.logs.jdbc-url" defaultValue=""/>
+    <springProperty name="LOGS_USERNAME" source="spring.datasource.logs.username" defaultValue="postgres"/>
+    <springProperty name="LOGS_PASSWORD" source="spring.datasource.logs.password" defaultValue="postgres"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="APPLICATION_LOG_DB" class="com.legalcs.aiops.log.ApplicationLogAppender">
+        <jdbcUrl>${LOGS_JDBC_URL}</jdbcUrl>
+        <username>${LOGS_USERNAME}</username>
+        <password>${LOGS_PASSWORD}</password>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="APPLICATION_LOG_DB"/>
+    </root>
+</configuration>

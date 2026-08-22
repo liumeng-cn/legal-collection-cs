@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: legal-collection-cs
+
+  datasource:
+    auth:
+      jdbc-url: jdbc:postgresql://localhost:5433/auth
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
+    business:
+      jdbc-url: jdbc:postgresql://localhost:5433/business
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
+    knowledge:
+      jdbc-url: jdbc:postgresql://localhost:5433/knowledge
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
+    chat:
+      jdbc-url: jdbc:postgresql://localhost:5433/chat
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
+    logs:
+      jdbc-url: jdbc:postgresql://localhost:5433/logs
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
+
+app:
+  jwt:
+    secret: "legal-collection-cs-dev-secret-key-change-in-prod-0123456789abcdef"
+    expiration-seconds: 86400
+  model:
+    name: deepseek-v4-pro
+    base-url: https://api.deepseek.com
+    api-key: ${DEEPSEEK_API_KEY}
+  embedding:
+    base-url: ${EMBEDDING_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+    api-key: ${EMBEDDING_API_KEY}
+    model: ${EMBEDDING_MODEL:text-embedding-v4}
+    dimension: 1024
+
+server:
+  port: 8080

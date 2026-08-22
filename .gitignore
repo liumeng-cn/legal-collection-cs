@@ -1,0 +1,28 @@
+# Java / Maven
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Node / Vue
+node_modules/
+dist/
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# 运行时数据与日志
+.logs/
+data/
+
+# 环境变量与密钥
+.env
+.env.local
+.env.*.local
+
+# 操作系统
+.DS_Store
+Thumbs.db
