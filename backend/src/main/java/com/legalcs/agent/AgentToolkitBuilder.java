@@ -1,5 +1,9 @@
 package com.legalcs.agent;
 
+import com.legalcs.tools.CaseQueryTool;
+import com.legalcs.tools.DebtQueryTool;
+import com.legalcs.tools.RagRetrievalTool;
+import com.legalcs.tools.RepaymentQueryTool;
 import io.agentscope.core.tool.Toolkit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

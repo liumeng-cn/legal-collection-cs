@@ -10,7 +10,7 @@
         </encoder>
     </appender>
 
-    <appender name="APPLICATION_LOG_DB" class="com.legalcs.aiops.log.ApplicationLogAppender">
+    <appender name="APPLICATION_LOG_DB" class="com.legalcs.utils.ApplicationLogAppender">
         <jdbcUrl>${LOGS_JDBC_URL}</jdbcUrl>
         <username>${LOGS_USERNAME}</username>
         <password>${LOGS_PASSWORD}</password>

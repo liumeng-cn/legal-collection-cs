@@ -1,6 +1,7 @@
 services:
   postgres:
-    image: pgvector/pgvector:pg16
+    build: ./db
+    image: legal-collection-cs-postgres:pg16
     container_name: legal-collection-cs-postgres
     restart: unless-stopped
     environment:

@@ -14,6 +14,7 @@ CREATE TABLE document (
 CREATE TABLE document_chunk (
     id          BIGSERIAL PRIMARY KEY,
     document_id BIGINT NOT NULL,
+    chunk_index INT    NOT NULL DEFAULT 0,
     chunk_text  TEXT   NOT NULL,
     embedding   vector(1024)
 );

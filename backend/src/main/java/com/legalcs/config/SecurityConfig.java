@@ -1,6 +1,6 @@
 package com.legalcs.config;
 
-import com.legalcs.auth.JwtAuthFilter;
+import com.legalcs.service.auth.JwtAuthFilter;
 import com.legalcs.common.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
