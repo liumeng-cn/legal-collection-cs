@@ -21,6 +21,10 @@ data/
 # 脚本生成产物
 scripts/out/
 
+# Python
+__pycache__/
+*.py[cod]
+
 # 环境变量与密钥
 backend/.env
 .env.local
