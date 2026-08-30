@@ -1,17 +1,12 @@
 package com.legalcs.service.rag;
 
-import com.legalcs.config.ModelProperties;
-import com.legalcs.dto.ChatCompletionRequest;
-import com.legalcs.dto.ChatCompletionResponse;
+import com.legalcs.client.DeepSeekClient;
 import com.legalcs.dto.CompletionMessage;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
 
 @Slf4j
 @Component
@@ -25,8 +20,7 @@ public class LlmQueryRewriter implements QueryRewriter {
     private static final double REWRITE_TEMPERATURE = 0.3;
     private static final int MAX_TOTAL_QUERIES = 4;
 
-    private final RestClient modelRestClient;
-    private final ModelProperties modelProperties;
+    private final DeepSeekClient deepSeekClient;
 
     @Override
     public List<String> rewrite(String query) {
@@ -52,23 +46,7 @@ public class LlmQueryRewriter implements QueryRewriter {
         List<CompletionMessage> messages = List.of(
                 new CompletionMessage("system", REWRITE_SYSTEM_PROMPT),
                 new CompletionMessage("user", query));
-        ChatCompletionRequest request = new ChatCompletionRequest(
-                modelProperties.getName(), messages, REWRITE_TEMPERATURE);
-        log.info("LLM 请求（查询改写）: {}", request);
-        ChatCompletionResponse response = modelRestClient.post()
-                .uri("/chat/completions")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + modelProperties.getApiKey())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .retrieve()
-                .body(ChatCompletionResponse.class);
-        if (response == null || response.choices() == null || response.choices().isEmpty()
-                || response.choices().get(0).message() == null) {
-            throw new IllegalStateException("查询改写接口返回为空");
-        }
-        String content = response.choices().get(0).message().content();
-        log.info("LLM 响应（查询改写）: {}", content);
-        return content;
+        return deepSeekClient.chat(messages, REWRITE_TEMPERATURE);
     }
 
     private List<String> parseSubqueries(String content) {

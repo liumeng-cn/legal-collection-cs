@@ -18,7 +18,7 @@ import reactor.core.publisher.Flux;
 @Component
 public class ModelCallLoggingMiddleware implements MiddlewareBase {
 
-    private static final int MAX_MESSAGE_TEXT_LENGTH = 300;
+    private static final int MAX_MESSAGE_TEXT_LENGTH = 5000;
 
     @Override
     public Flux<AgentEvent> onModelCall(

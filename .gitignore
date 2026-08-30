@@ -18,8 +18,11 @@ dist/
 .logs/
 data/
 
+# 脚本生成产物
+scripts/out/
+
 # 环境变量与密钥
-.env
+backend/.env
 .env.local
 .env.*.local
 

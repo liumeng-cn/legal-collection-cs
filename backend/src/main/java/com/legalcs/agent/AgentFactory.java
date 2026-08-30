@@ -1,10 +1,10 @@
 package com.legalcs.agent;
 
-import com.legalcs.config.ModelProperties;
-import io.agentscope.core.ReActAgent;
 import io.agentscope.core.model.Model;
-import io.agentscope.core.model.ModelCreationContext;
-import io.agentscope.core.model.ModelRegistry;
+import io.agentscope.core.tracing.OtelTracingMiddleware;
+import io.agentscope.harness.agent.HarnessAgent;
+import io.agentscope.harness.agent.memory.compaction.CompactionConfig;
+import java.nio.file.Path;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,9 +14,12 @@ import org.springframework.context.annotation.Configuration;
 public class AgentFactory {
 
     private static final String AGENT_NAME = "legal-collection-cs";
-    private static final String MODEL_PROVIDER_PREFIX = "openai:";
+    private static final String WORKSPACE_DIR = "data/legal-collection-workspace";
     private static final int MAX_ITERS = 6;
     private static final int MAX_RETRIES = 2;
+    private static final int COMPACTION_TRIGGER_MESSAGES = 30;
+    private static final int COMPACTION_KEEP_MESSAGES = 10;
+    private static final int COMPACTION_TRIGGER_TOKENS = 60_000;
     private static final String SYSTEM_PROMPT = """
             # 角色
             你是「法催平台」的双角色智能客服，服务对象包括催收员和债务人。
@@ -58,32 +61,38 @@ public class AgentFactory {
             答：「案件 A-1001 最近还款记录：1.【日期】还款【金额】元；2. …」
             """;
 
-    private final ModelProperties modelProperties;
+    private final Model model;
     private final AgentToolkitBuilder toolkitBuilder;
     private final ModelCallLoggingMiddleware modelCallLoggingMiddleware;
     private final RoleSystemPromptMiddleware roleSystemPromptMiddleware;
+    private final OtelTracingMiddleware otelTracingMiddleware;
 
     @Bean
-    public ReActAgent legalCollectionAgent() {
-        return ReActAgent.builder()
+    public HarnessAgent legalCollectionAgent() {
+        return HarnessAgent.builder()
                 .name(AGENT_NAME)
                 .sysPrompt(SYSTEM_PROMPT)
-                .model(resolveModel())
+                .model(model)
+                .workspace(Path.of(WORKSPACE_DIR))
                 .toolkit(toolkitBuilder.build())
                 .middleware(modelCallLoggingMiddleware)
                 .middleware(roleSystemPromptMiddleware)
+                .middleware(otelTracingMiddleware)
                 .maxIters(MAX_ITERS)
                 .maxRetries(MAX_RETRIES)
+                .compaction(CompactionConfig.builder()
+                        .triggerMessages(COMPACTION_TRIGGER_MESSAGES)
+                        .keepMessages(COMPACTION_KEEP_MESSAGES)
+                        .triggerTokens(COMPACTION_TRIGGER_TOKENS)
+                        .build())
+                .disableMemoryHooks()
+                .disableMemoryTools()
+                .disableFilesystemTools()
+                .disableShellTool()
+                .disableWorkspaceContext()
+                .disableSubagents()
+                .disableDynamicSkills()
+                .disableDefaultWorkspaceSkills()
                 .build();
-    }
-
-    private Model resolveModel() {
-        String modelId = MODEL_PROVIDER_PREFIX + modelProperties.getName();
-        ModelCreationContext context = ModelCreationContext.builder()
-                .apiKey(modelProperties.getApiKey())
-                .baseUrl(modelProperties.getBaseUrl())
-                .stream(true)
-                .build();
-        return ModelRegistry.resolve(modelId, context);
     }
 }

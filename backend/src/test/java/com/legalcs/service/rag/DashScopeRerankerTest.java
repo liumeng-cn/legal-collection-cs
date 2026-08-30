@@ -1,25 +1,26 @@
 package com.legalcs.service.rag;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.legalcs.config.EmbeddingProperties;
-import com.legalcs.config.RerankProperties;
+import com.legalcs.client.DashScopeClient;
 import com.legalcs.entity.RagChunk;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.web.client.RestClient;
 
 class DashScopeRerankerTest {
 
     @Test
     void rerankFallsBackToRrfOrderOnFailure() {
-        RestClient restClient = mock(RestClient.class);
-        when(restClient.post()).thenThrow(new RuntimeException("down"));
-        DashScopeReranker reranker = new DashScopeReranker(
-                restClient, mock(RerankProperties.class), mock(EmbeddingProperties.class));
+        DashScopeClient dashScopeClient = mock(DashScopeClient.class);
+        when(dashScopeClient.rerank(anyString(), anyList(), anyInt()))
+                .thenThrow(new RuntimeException("down"));
+        DashScopeReranker reranker = new DashScopeReranker(dashScopeClient);
 
         RagChunk a = new RagChunk(1L, 1L, 0, "A", "a", 0.9);
         RagChunk b = new RagChunk(2L, 2L, 0, "B", "b", 0.8);

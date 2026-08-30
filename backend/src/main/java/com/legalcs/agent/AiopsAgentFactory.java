@@ -1,9 +1,7 @@
 package com.legalcs.agent;
 
-import com.legalcs.config.ModelProperties;
 import io.agentscope.core.model.Model;
-import io.agentscope.core.model.ModelCreationContext;
-import io.agentscope.core.model.ModelRegistry;
+import io.agentscope.core.tracing.OtelTracingMiddleware;
 import io.agentscope.harness.agent.HarnessAgent;
 import io.agentscope.harness.agent.memory.compaction.CompactionConfig;
 import io.agentscope.harness.agent.subagent.SubagentDeclaration;
@@ -20,7 +18,6 @@ import java.util.List;
 public class AiopsAgentFactory {
 
     private static final String AGENT_NAME = "aiops-diagnosis";
-    private static final String MODEL_PROVIDER_PREFIX = "openai:";
     private static final String WORKSPACE_DIR = "data/aiops-workspace";
     private static final int COMPACTION_TRIGGER_MESSAGES = 30;
     private static final int COMPACTION_KEEP_MESSAGES = 10;
@@ -110,19 +107,21 @@ public class AiopsAgentFactory {
             输出：流程差异点、违反的业务规则、标准流程片段。只报告流程证据，不下结论。
             """;
 
-    private final ModelProperties modelProperties;
+    private final Model model;
     private final AiopsToolkitBuilder toolkitBuilder;
     private final ModelCallLoggingMiddleware modelCallLoggingMiddleware;
+    private final OtelTracingMiddleware otelTracingMiddleware;
 
     @Bean
     public HarnessAgent aiopsAgent() {
         return HarnessAgent.builder()
                 .name(AGENT_NAME)
                 .sysPrompt(SYSTEM_PROMPT)
-                .model(resolveModel())
+                .model(model)
                 .workspace(Path.of(WORKSPACE_DIR))
                 .toolkit(toolkitBuilder.build())
                 .middleware(modelCallLoggingMiddleware)
+                .middleware(otelTracingMiddleware)
                 .maxIters(MAIN_AGENT_MAX_ITERS)
                 .maxRetries(MAX_RETRIES)
                 .compaction(CompactionConfig.builder()
@@ -131,6 +130,8 @@ public class AiopsAgentFactory {
                         .triggerTokens(MAIN_TRIGGER_TOKENS)
                         .build())
                 .disableSessionPersistence()
+                .disableMemoryHooks()
+                .disableMemoryTools()
                 .subagent(logForensics())
                 .subagent(dataForensics())
                 .subagent(processVerifier())
@@ -168,15 +169,5 @@ public class AiopsAgentFactory {
                 .tools(List.of("search_knowledge", "expand_knowledge"))
                 .steps(SUBAGENT_MAX_ITERS)
                 .build();
-    }
-
-    private Model resolveModel() {
-        String modelId = MODEL_PROVIDER_PREFIX + modelProperties.getName();
-        ModelCreationContext context = ModelCreationContext.builder()
-                .apiKey(modelProperties.getApiKey())
-                .baseUrl(modelProperties.getBaseUrl())
-                .stream(true)
-                .build();
-        return ModelRegistry.resolve(modelId, context);
     }
 }

@@ -2,6 +2,6 @@ package com.legalcs.dto;
 
 public record EmbeddingRequest(
         String model,
-        String input,
-        Integer dimensions) {
+        EmbeddingInput input,
+        EmbeddingParameters parameters) {
 }

@@ -9,9 +9,9 @@ import com.legalcs.entity.Conversation;
 import com.legalcs.common.MessageRole;
 import com.legalcs.common.Role;
 import com.legalcs.config.ModelProperties;
+import com.legalcs.service.memory.MemoryService;
 import com.legalcs.service.rag.Generator;
 import io.agentscope.core.agent.RuntimeContext;
-import io.agentscope.core.message.AssistantMessage;
 import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.SystemMessage;
 import io.agentscope.core.message.UserMessage;
@@ -31,7 +31,6 @@ import reactor.core.publisher.Flux;
 public class ChatService {
 
     private static final int TITLE_MAX_LENGTH = 20;
-    private static final String ASSISTANT_NAME = "assistant";
     private static final String FALLBACK_DEBTOR = "抱歉，服务暂时不可用，请稍后再试或联系人工客服协助处理。";
     private static final String FALLBACK_STAFF = "模型服务暂不可用，请稍后重试。";
 
@@ -39,12 +38,21 @@ public class ChatService {
     private final ConversationDAO conversationDAO;
     private final MessageDAO messageDAO;
     private final ModelProperties modelProperties;
+    private final MemoryService memoryService;
 
     public ChatStream chat(ChatRequest request, AuthContext authContext) {
+        boolean isNewConversation = request.conversationId() == null || request.conversationId().isBlank();
         long conversationId = resolveConversationId(request.conversationId(), authContext, request.message());
 
-        List<Msg> messages = new ArrayList<>(loadHistory(conversationId));
         messageDAO.insert(conversationId, MessageRole.USER, request.message());
+
+        List<Msg> messages = new ArrayList<>();
+        if (isNewConversation) {
+            String memory = memoryService.load(authContext.getUserId(), request.message());
+            if (!memory.isBlank()) {
+                messages.add(new SystemMessage(memory));
+            }
+        }
         messages.add(new UserMessage(request.message()));
 
         RuntimeContext ctx = RuntimeContext.builder()
@@ -79,6 +87,7 @@ public class ChatService {
                     if (!reply.isEmpty()) {
                         messageDAO.insert(conversationId, MessageRole.ASSISTANT, reply.toString());
                         conversationDAO.updateTimestamp(conversationId);
+                        memoryService.saveAsync(authContext.getUserId(), conversationId);
                     }
                 });
 
@@ -91,22 +100,6 @@ public class ChatService {
 
     public List<ChatMessage> listMessages(long conversationId) {
         return messageDAO.findByConversationId(conversationId);
-    }
-
-    private List<Msg> loadHistory(long conversationId) {
-        List<Msg> history = new ArrayList<>();
-        for (ChatMessage message : messageDAO.findByConversationId(conversationId)) {
-            history.add(toMsg(message));
-        }
-        return history;
-    }
-
-    private Msg toMsg(ChatMessage message) {
-        return switch (message.getRole()) {
-            case USER -> new UserMessage(message.getContent());
-            case ASSISTANT -> new AssistantMessage(ASSISTANT_NAME, message.getContent());
-            case SYSTEM -> new SystemMessage(message.getContent());
-        };
     }
 
     private long resolveConversationId(String conversationId, AuthContext authContext, String message) {

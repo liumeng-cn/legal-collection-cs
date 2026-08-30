@@ -13,5 +13,16 @@ services:
       - ./db/init:/docker-entrypoint-initdb.d
       - legal-cs-pgdata:/var/lib/postgresql/data
 
+  jaeger:
+    image: docker.1ms.run/jaegertracing/all-in-one:latest
+    container_name: legal-cs-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+
 volumes:
   legal-cs-pgdata:

@@ -38,17 +38,22 @@ app:
     base-url: https://api.deepseek.com
     api-key: ${DEEPSEEK_API_KEY}
     timeout: 30s
-  embedding:
-    base-url: ${EMBEDDING_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
-    api-key: ${EMBEDDING_API_KEY}
-    model: ${EMBEDDING_MODEL:text-embedding-v4}
-    dimension: 1024
+  dashscope:
+    base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
+    api-key: ${DASHSCOPE_API_KEY}
     connect-timeout: 3s
     read-timeout: 10s
-  rerank:
-    base-url: ${RERANK_BASE_URL:https://dashscope.aliyuncs.com}
-    model: ${RERANK_MODEL:gte-rerank-v2}
-    timeout: 10s
+    embedding:
+      model: ${EMBEDDING_MODEL:qwen3-vl-embedding}
+      dimension: 1024
+    rerank:
+      model: ${RERANK_MODEL:qwen3-rerank}
+  memory:
+    enabled: true
+    top-k: 5
+    similarity-threshold: 0.85
+    retention-days: 90
+    expire-interval-ms: 86400000
 
 server:
   port: 8080
